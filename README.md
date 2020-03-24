@@ -4,8 +4,6 @@ An HttpListener wrapper class that utilizes asynchronous HTTP request processing
 This is an example of how to utilize the `System.Net.HttpListener` class within .NET with multithreaded operations allowing for custom API or web server configurations.
 
 ## Usage
-Using the HttpHost class is easy, for both Asynchronous or synchronous operation. The difficult part is programing the Windows HTTP API to allow communication through the ports and prefixes you desire.
-
 ### Step 1: Configure Windows HTTP API
 If you're using HTTPS, you must install the certificate to your local machine's certificate store before running these commands. If you plan on using both HTTP and HTTPS, you must run both commands. If you are only using one, you just need to run the one you need.
 | Protocol | Command Usage |
