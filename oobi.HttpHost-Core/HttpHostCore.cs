@@ -131,7 +131,6 @@ namespace oobi
         /// Create a new instance of an HttpHost, for handling your (a)synchronous HTTP requests.
         /// </summary>
         /// <param name="BindingPrefixes">A List of URI compatible strings (wild-cards allowed) for the System.Net.HttpListener to bind to.</param>
-        /// <param name="GenerateMessage">The string function res</param>
         public HttpHostCore(List<string> BindingPrefixes)
         {
             _prefixes = BindingPrefixes;
