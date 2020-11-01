@@ -9,10 +9,13 @@ If you're using HTTPS, you must install the certificate to your local machine's 
 | Protocol | Command Usage |
 | --------- | ------------- |
 | HTTP | `netsh http add urlacl url=[URIPrefix] user=[Username] listen=yes`  |
-| HTTPS | `netsh http add sslcert ipport=[URIPrefix] certhash=[CertificateThumbprint] appid={[AppGUID]}`  |
+| HTTPS | ```
+netsh http add urlacl url=[URIPrefix] user=[Username] listen=yes
+netsh http add sslcert ipport=[IPAddress]:[Port] certhash=[CertificateThumbprint] appid={[AppGUID]}
+```  |
 
 **Parameters**:
-1. `[URIPrefix]` - The URI that your app will listen to. Make sure that the 'http' prefix matches the protocol type you are binding it to. More documentation here. Examples are:
+1. `[URIPrefix]` - The URI that your app will listen to. Make sure that the 'http' prefix matches the protocol type you are binding it to. Examples are:
 
 | Prefix | Outcome |
 | --------- | ------------- |
@@ -21,47 +24,54 @@ If you're using HTTPS, you must install the certificate to your local machine's 
 | http://192.168.5.100:990/ | all requests on a specific local adapter on port 990 |
 | https://+:443/ | all requests to default HTTPS port 443. |
 
-
-2. `[Username]` - The "DOMAIN\User" or User Group permitted to utilize the binding ("Everyone" is allowed).
+2. `[IPAddress]` and `[Port]` - The IP Address and port number the listener should attach to. 0.0.0.0 is all interfaces/addresses, 127.0.0.1 restricts to localhost, otherwise use desired listening IP address.
+2. `[Username]` - The "DOMAIN\User" or User Group permitted to utilize the binding (the keyword "everyone" allows all users to attach listener applications to the prefix entry).
 3. `[CertificateThumbprint]` - The SHA Hash of the certificate being bound to the prefix (Found on the "Details" tab on the certificate's properties window. Only works if certificate is installed to local store).
 4. `[AppGUID]` - The GUID of the assembly that will utilize the binding. In Visual Studio, this can be found by opening your project's Properties window, and clicking the "Assembly Information" button. the GUID must be encapsulated in curly brackets {}.
 
-### Step 2: C# utilization
+### Step 2: C# Code Sample
 Code:
 ```csharp
-static void Main(string[] args) {
-    List<string> prefixes = new List<string>();
-    prefixes.Add("http://+:80/");
-    prefixes.Add("https://+:443/");
+class Program
+{
+    static void Main(string[] args)
+    {
 
-    oobi.HttpHost host = new oobi.HttpHost(prefixes);
+        //create the HttpHost class instance
+        oobi.HttpHostCore.HttpHost host = new oobi.HttpHostCore.HttpHost();
 
-    Write("Starting server");
-    host.StartHostAsync(Message_GetRequest);
-    do {
-        Write(".");
-    } while (host.isStarting == true);
-    WriteLine("OK!");
-    
-    do {
-        // simulate other application work here
-        string input = ReadLine();
-        WriteLine(input);
-    } while (host.isRunning == true);
-    
-    ReadLine();
-}
+        //define URL prefixes for the HttpHost to bind to
+        host.PrefixBindings.Add("http://+:80/");
+        host.PrefixBindings.Add("https://+:443/MyApp/");
 
-private static string Message_GetRequest(oobi.HttpHost.StateInfo scene) {
-    scene.Listener............... //HttpListener listening for requests.
-    scene.Context................ //HttpContext that is responsible for processing this request.
-    scene.Request................ //HttpRequest that contains the payload sent by the requestor.
-    scene.Response............... //HttpResponse that will contain and deliver the server response payload.
-    scene.AdditionalArguments.... //A List<object> that contains other potential classes you would like
-                                  //to pass to this funtion.
-    
-    scene.CreationTime
-    
-    return("<b>This string is only sent if the response stream has not been closed.</b>");
+        //start the server asynchronously (you can do other things on this thread while the listener is starting).
+        Write("Starting server");
+        host.StartHostAsync(Message_GetRequest);
+        do
+        {
+            Write(".");
+        } while (host.IsStarting == true);
+        WriteLine("OK!");
+
+        //while the listener is running, your main thread can still do work.
+        do
+        {
+            // simulate other application work here
+            string input = ReadLine();
+            WriteLine(input);
+        } while (host.IsRunning == true);
+
+    }
+
+    //This function is called on each incoming request. Each incoming request is designated it's own thread.
+    private static string Message_GetRequest(oobi.HttpHostCore.Components.StateInfo scene)
+    {
+
+        var datetime = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        WriteLine($"[{datetime}] REQUEST: {scene.Request.HttpMethod}: {scene.Request.RawUrl}");
+
+        return ("<h1>It Works!</h1>");
+
+    }
 }
 ```

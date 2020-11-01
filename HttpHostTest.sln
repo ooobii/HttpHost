@@ -5,7 +5,12 @@ VisualStudioVersion = 16.0.29709.97
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "oobi.HttpHost-Core", "oobi.HttpHost-Core\oobi.HttpHost-Core.csproj", "{A28A7E49-D851-46F8-87A8-C081A0DF7562}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HttpHost-Core_Test", "oobi.HttpHost-Core_Test\HttpHost-Core_Test.csproj", "{F1E25CE7-9206-4E22-892E-C17EAEADFFAF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "HttpHost-Core_Test", "oobi.HttpHost-Core_Test\HttpHost-Core_Test.csproj", "{F1E25CE7-9206-4E22-892E-C17EAEADFFAF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{081AE00A-3DFA-4296-8968-89BFAD03FF8D}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
