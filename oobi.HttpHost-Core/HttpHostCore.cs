@@ -4,28 +4,27 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace oobi
+namespace oobi.HttpHostCore
 {
 
 
     /// <summary>
     /// An HttpListener wrapper that utilizes asynchronous HTTP request hosting services.
     /// </summary>
-    public class HttpHostCore
+    public class HttpHost
     {
         #region "Properties"
+
+
+
         /// <summary>
         /// The URI prefixes that the HttpListener will bind to (in List(Of String) format instead of URI collection).
         /// </summary>
-        public List<string> HostBindingPrefixes
+        public List<string> PrefixBindings
         {
             get
             {
-                try
-                {
-                    return _listener.Prefixes.ToList<string>();
-                }
-                catch { return _prefixes; }
+                if (_listener != null) { return _listener.Prefixes.ToList<string>(); } else { return _prefixes; }
             }
             set
             {
@@ -41,8 +40,10 @@ namespace oobi
                 catch { }
             }
         }
-        private List<string> _prefixes;
-        //------
+        private List<string> _prefixes = new List<string>();
+
+
+
         /// <summary>
         /// The HttpListener base object this class is operating upon.
         /// </summary>
@@ -51,12 +52,16 @@ namespace oobi
             get { return _listener; }
         }
         private HttpListener _listener;
-        //------
+
+
+
         /// <summary>
         /// The function delegate that is responsible for processing incoming requests to the server.
         /// </summary>
-        public Func<StateInfo, string> GenerateMessageFunctionDelegate;
-        //------
+        public Func<oobi.HttpHostCore.Components.StateInfo, string> GenerateMessageFunctionDelegate;
+
+
+
         /// <summary>
         /// Determines if the System.Net.HttpListener class is actively listening.
         /// </summary>
@@ -67,57 +72,26 @@ namespace oobi
                 if (_starting == false) { return _listener.IsListening; } else { return false; }
             }
         }
-        //------
+
+
+
         /// <summary>
         /// Determines if the asynchronous operations are still waiting for the listener to start.
         /// Will return false if running or stopped, but true if start signal was received but the listener has not started yet.
         /// </summary>
-        public bool isStarting
+        public bool IsStarting
         {
             get { return _starting; }
         }
+
+
+
         #endregion
 
         #region "Container Classes"
-        private class AsyncCallbackContainer
-        {
-            public object Argument;
-            public HttpListener HttpListener;
+        
 
-            public AsyncCallbackContainer(ref HttpListener listener, ref object argument)
-            {
-                HttpListener = listener;
-                Argument = argument;
-            }
-        }
-
-        /// <summary>
-        /// Passed to the 'GenerateMessage' method containing the listener instance, request, context, response, and additional object references.
-        /// The string returned from the 'GenerateMessage' function is sent as the final transmission through the responding sockets before closure.
-        /// </summary>
-        public class StateInfo
-        {
-            public HttpListener Listener;
-            public HttpListenerContext Context;
-            public HttpListenerRequest Request;
-            public HttpListenerResponse Response;
-            public object Argument;
-
-            public DateTime CreationTime;
-
-            public StateInfo(ref HttpListener http, ref HttpListenerContext context,
-                                   ref HttpListenerRequest request, ref HttpListenerResponse response,
-                                   ref object argument)
-            {
-                Listener = http;
-                Context = context;
-                Request = request;
-                Response = response;
-                Argument = argument;
-
-                CreationTime = DateTime.Now;
-            }
-        }
+        
         #endregion
 
         #region "Private Objects"
@@ -131,9 +105,9 @@ namespace oobi
         /// Create a new instance of an HttpHost, for handling your (a)synchronous HTTP requests.
         /// </summary>
         /// <param name="BindingPrefixes">A List of URI compatible strings (wild-cards allowed) for the System.Net.HttpListener to bind to.</param>
-        public HttpHostCore(List<string> BindingPrefixes)
+        /// <param name="GenerateMessage">The string function res</param>
+        public HttpHost()
         {
-            _prefixes = BindingPrefixes;
         }
 
 
@@ -141,7 +115,7 @@ namespace oobi
         /// <summary>
         /// Begin accepting and processing incoming connections received on the bound prefixes (synchronously).
         /// </summary>
-        public void StartHost(Func<StateInfo, string> GenerateMessage, object args = null)
+        public void StartHost(Func<Components.StateInfo, string> GenerateMessage, object args = null)
         {
             _listener = new HttpListener();
             foreach (string Itm in _prefixes)
@@ -159,7 +133,7 @@ namespace oobi
 
                 try
                 {
-                    StateInfo scenario = new StateInfo(ref _listener, ref context, ref request, ref response, ref args);
+                    Components.StateInfo scenario = new Components.StateInfo(ref _listener, ref context, ref request, ref response, ref args);
 
                     string message = GenerateMessage(scenario); ;
                     byte[] buff = System.Text.Encoding.UTF8.GetBytes(message);
@@ -187,7 +161,7 @@ namespace oobi
         /// <summary>
         /// Begin accepting and processing incoming connections received on the bound prefixes asynchronously.
         /// </summary>
-        public void StartHostAsync(Func<StateInfo, string> GenerateMessage, object args)
+        public void StartHostAsync(Func<Components.StateInfo, string> GenerateMessage, object args = null)
         {
             GenerateMessageFunctionDelegate = GenerateMessage;
             _listener = new HttpListener();
@@ -208,7 +182,7 @@ namespace oobi
             do
             {
 
-                AsyncCallbackContainer container = new AsyncCallbackContainer(ref _listener, ref args);
+                Components.AsyncCallbackContainer container = new Components.AsyncCallbackContainer(ref _listener, ref args);
 
                 IAsyncResult result = _listener.BeginGetContext(new AsyncCallback(HandleRecievedContext), container);
                 result.AsyncWaitHandle.WaitOne();
@@ -220,7 +194,7 @@ namespace oobi
         {
             if (_listener.IsListening == true)
             {
-                AsyncCallbackContainer container = result.AsyncState as AsyncCallbackContainer;
+                Components.AsyncCallbackContainer container = result.AsyncState as Components.AsyncCallbackContainer;
                 HttpListener http = container.HttpListener;
                 HttpListenerContext context = http.EndGetContext(result);
                 HttpListenerRequest request = context.Request;
@@ -228,12 +202,12 @@ namespace oobi
 
                 try
                 {
-                    byte[] buff = System.Text.Encoding.UTF8.GetBytes(this.GenerateMessageFunctionDelegate(new StateInfo(ref http,
-                                                                                                                    ref context,
-                                                                                                                    ref request,
-                                                                                                                    ref response,
-                                                                                                                    ref container.Argument)
-                                                                                                        )
+                    byte[] buff = System.Text.Encoding.UTF8.GetBytes(this.GenerateMessageFunctionDelegate(new Components.StateInfo(ref http,
+                                                                                                                                   ref context,
+                                                                                                                                   ref request,
+                                                                                                                                   ref response,
+                                                                                                                                   ref container.Argument)
+                                                                                                          )
                                                                     );
                     System.IO.Stream output = response.OutputStream;
                     output.Write(buff, 0, buff.Length);
