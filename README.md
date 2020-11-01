@@ -9,10 +9,7 @@ If you're using HTTPS, you must install the certificate to your local machine's 
 | Protocol | Command Usage |
 | --------- | ------------- |
 | HTTP | `netsh http add urlacl url=[URIPrefix] user=[Username] listen=yes`  |
-| HTTPS | ```
-netsh http add urlacl url=[URIPrefix] user=[Username] listen=yes
-netsh http add sslcert ipport=[IPAddress]:[Port] certhash=[CertificateThumbprint] appid={[AppGUID]}
-```  |
+| HTTPS | `netsh http add urlacl url=[URIPrefix] user=[Username] listen=yes` <br/> `netsh http add sslcert ipport=[IPAddress]:[Port] certhash=[CertificateThumbprint] appid={[AppGUID]}` |
 
 **Parameters**:
 1. `[URIPrefix]` - The URI that your app will listen to. Make sure that the 'http' prefix matches the protocol type you are binding it to. Examples are:
